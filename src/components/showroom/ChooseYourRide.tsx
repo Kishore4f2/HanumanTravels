@@ -52,7 +52,7 @@ const transitionSpring = {
   stiffness: 140,
   damping: 22,
   mass: 1,
-};
+} as const;
 
 export default function ChooseYourRide() {
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleType>("4-seater");

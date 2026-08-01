@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 // Standard luxury easing curve matching Hero & WhyChooseUs sections
-export const easeLuxury = [0.16, 1, 0.3, 1];
+export const easeLuxury = [0.16, 1, 0.3, 1] as const;
 
 export const studioTransitionVariants = {
   hidden: { opacity: 0, y: 40 },

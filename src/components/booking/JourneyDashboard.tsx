@@ -21,6 +21,7 @@ interface JourneyDashboardProps {
   destination: Destination;
   vehicleType: "4-seater" | "7-seater";
   fare: number;
+  tripType?: "one-way" | "round-trip";
 }
 
 export default function JourneyDashboard({
@@ -28,9 +29,12 @@ export default function JourneyDashboard({
   destination,
   vehicleType,
   fare,
+  tripType = "one-way",
 }: JourneyDashboardProps) {
   const vehicleTitle =
     vehicleType === "4-seater" ? "4 Seater Executive" : "7 Seater Luxury";
+
+  const isRoundTrip = tripType === "round-trip";
 
   return (
     <div className="w-full flex flex-col gap-5 text-left">
@@ -46,7 +50,7 @@ export default function JourneyDashboard({
 
         <div className="flex items-center justify-between gap-2 mb-4">
           <span className="text-[10px] font-mono font-bold tracking-widest text-brand-orange uppercase px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/30">
-            YOUR JOURNEY
+            {isRoundTrip ? "ROUND-TRIP JOURNEY" : "ONE-WAY JOURNEY"}
           </span>
           <span className="text-xs font-semibold text-white/70">
             {vehicleTitle}
@@ -64,7 +68,7 @@ export default function JourneyDashboard({
 
           <div className="flex items-center gap-1 text-brand-orange font-mono">
             <span className="w-2 h-2 rounded-full bg-brand-orange animate-ping" />
-            <span className="text-xs">➔</span>
+            <span className="text-xs">{isRoundTrip ? "⇄" : "➔"}</span>
           </div>
 
           <div className="text-right max-w-[45%]">
@@ -79,11 +83,15 @@ export default function JourneyDashboard({
         <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10 text-xs">
           <div>
             <span className="text-[10px] uppercase font-mono text-white/40 block">Distance</span>
-            <span className="font-semibold text-white font-display">{destination.distanceKm} km</span>
+            <span className="font-semibold text-white font-display">
+              {isRoundTrip ? destination.distanceKm * 2 : destination.distanceKm} km
+            </span>
           </div>
           <div>
             <span className="text-[10px] uppercase font-mono text-white/40 block">Duration</span>
-            <span className="font-semibold text-white font-display">{destination.estimatedTime}</span>
+            <span className="font-semibold text-white font-display">
+              {isRoundTrip ? `${destination.estimatedTime} x2` : destination.estimatedTime}
+            </span>
           </div>
           <div>
             <span className="text-[10px] uppercase font-mono text-white/40 block">Est. Fare</span>

@@ -22,6 +22,8 @@ interface ReservationPanelProps {
   onChangeDestination: (dest: Destination) => void;
   vehicleType: "4-seater" | "7-seater";
   onChangeVehicleType: (type: "4-seater" | "7-seater") => void;
+  tripType: "one-way" | "round-trip";
+  onChangeTripType: (type: "one-way" | "round-trip") => void;
   pickupDate: string;
   setPickupDate: (date: string) => void;
   pickupTime: string;
@@ -45,6 +47,8 @@ export default function ReservationPanel({
   onChangeDestination,
   vehicleType,
   onChangeVehicleType,
+  tripType,
+  onChangeTripType,
   pickupDate,
   setPickupDate,
   pickupTime,
@@ -91,7 +95,7 @@ export default function ReservationPanel({
 
       <form onSubmit={onSubmit} className="space-y-6">
         {/* 2. AUTO PRE-FILLED READ-ONLY SELECTIONS SUMMARY */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-white/[0.02] border border-white/10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/10">
           <div>
             <span className="text-[9px] uppercase font-mono text-white/40 block mb-0.5">Pickup</span>
             <input
@@ -138,6 +142,18 @@ export default function ReservationPanel({
             >
               <option value="4-seater" className="bg-black text-white">4 Seater Executive</option>
               <option value="7-seater" className="bg-black text-white">7 Seater Luxury</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-[9px] uppercase font-mono text-white/40 block mb-0.5">Trip Type</label>
+            <select
+              value={tripType}
+              onChange={(e) => onChangeTripType(e.target.value as any)}
+              className="bg-transparent text-xs font-semibold text-white font-display focus:outline-none cursor-pointer w-full border-b border-white/5 focus:border-brand-orange/40 pb-0.5"
+            >
+              <option value="one-way" className="bg-black text-white">One-Way</option>
+              <option value="round-trip" className="bg-black text-white">Round-Trip</option>
             </select>
           </div>
         </div>

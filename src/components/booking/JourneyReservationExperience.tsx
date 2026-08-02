@@ -27,6 +27,7 @@ export default function JourneyReservationExperience({ initialJourney }: Journey
   const [passengers, setPassengers] = useState(1);
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [tripType, setTripType] = useState<"one-way" | "round-trip">("one-way");
   const [specialRequests, setSpecialRequests] = useState("");
 
   // Process & Confirmation States
@@ -43,6 +44,9 @@ export default function JourneyReservationExperience({ initialJourney }: Journey
         setPickupDate(initialJourney.travelDate);
       }
       setPassengers(initialJourney.passengerCount);
+      if (initialJourney.tripType) {
+        setTripType(initialJourney.tripType);
+      }
 
       // Construct a dynamic destination object
       const customDest: Destination = {
@@ -65,10 +69,18 @@ export default function JourneyReservationExperience({ initialJourney }: Journey
   }, [initialJourney]);
 
   // Calculate live fare
-  const currentPrice =
-    selectedDestination.id === "custom"
-      ? (vehicleType === "4-seater" ? selectedDestination.price4Seater : selectedDestination.price7Seater)
-      : (vehicleType === "4-seater" ? selectedDestination.price4Seater : selectedDestination.price7Seater);
+  const getFare = () => {
+    const rate = vehicleType === "4-seater" ? 14 : 18;
+    const dist = selectedDestination.distanceKm;
+    const mult = tripType === "round-trip" ? 2 : 1;
+
+    if (selectedDestination.id === "custom" && initialJourney && initialJourney.destination === selectedDestination.name && initialJourney.vehicleType === vehicleType && initialJourney.tripType === tripType) {
+      return initialJourney.estimatedFare;
+    }
+    return dist * rate * mult;
+  };
+
+  const currentPrice = getFare();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,10 +95,11 @@ export default function JourneyReservationExperience({ initialJourney }: Journey
     const randomRef = `HT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const vehicleTitle = vehicleType === "4-seater" ? "4 Seater Executive" : "7 Seater Luxury";
+    const tripTitle = tripType === "round-trip" ? "Round-Trip" : "One-Way";
     const message = `Hi Hanuman Travels, I have reserved a luxury ride on your portal.
 *Booking Ref:* #${randomRef}
 *Passenger:* ${fullName} (${phoneNumber})
-*Route:* ${pickupLocation} ➔ ${selectedDestination.name}
+*Route:* ${pickupLocation} ➔ ${selectedDestination.name} (${tripTitle})
 *Vehicle:* ${vehicleTitle}
 *Date & Time:* ${pickupDate} at ${pickupTime} (${passengers} Passengers)
 *Estimated Fare:* ₹${currentPrice.toLocaleString()}
@@ -180,6 +193,7 @@ ${specialRequests ? `*Special Instructions:* ${specialRequests}` : ""}`;
                   destination={selectedDestination}
                   vehicleType={vehicleType}
                   fare={currentPrice}
+                  tripType={tripType}
                 />
               </div>
 
@@ -192,6 +206,8 @@ ${specialRequests ? `*Special Instructions:* ${specialRequests}` : ""}`;
                   onChangeDestination={(dest) => setSelectedDestination(dest)}
                   vehicleType={vehicleType}
                   onChangeVehicleType={(type) => setVehicleType(type)}
+                  tripType={tripType}
+                  onChangeTripType={(type) => setTripType(type)}
                   pickupDate={pickupDate}
                   setPickupDate={setPickupDate}
                   pickupTime={pickupTime}

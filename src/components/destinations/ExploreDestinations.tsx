@@ -38,6 +38,7 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
   const [isDestFocused, setIsDestFocused] = useState(false);
 
   const [vehicleType, setVehicleType] = useState<"4-seater" | "7-seater">("4-seater");
+  const [tripType, setTripType] = useState<"one-way" | "round-trip">("one-way");
   const [travelDate, setTravelDate] = useState("");
   const [passengerCount, setPassengerCount] = useState(1);
 
@@ -132,11 +133,12 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
     updateCarousel();
   }, [pickupLocation]);
 
-  // Handle immediate fare recalculation on vehicle type shift after calculation finishes
+  // Handle immediate fare recalculation on vehicle type or trip type shift after calculation finishes
   useEffect(() => {
     if (calculationFinished && distance > 0) {
       const rate = vehicleType === "4-seater" ? 14 : 18;
-      const newFare = distance * rate;
+      const multiplier = tripType === "round-trip" ? 2 : 1;
+      const newFare = distance * rate * multiplier;
       setEstimatedFare(newFare);
       
       // Animate fare change smoothly
@@ -149,7 +151,7 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
         }
       });
     }
-  }, [vehicleType, distance, calculationFinished]);
+  }, [vehicleType, tripType, distance, calculationFinished]);
 
   const saveToRecent = (loc: LocationResult) => {
     const updated = [loc, ...recentSearches.filter(s => s.displayName !== loc.displayName)].slice(0, 3);
@@ -191,7 +193,8 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
       setDuration(metrics.durationStr);
       
       const rate = vehicleType === "4-seater" ? 14 : 18;
-      const finalFare = metrics.distanceKm * rate;
+      const multiplier = tripType === "round-trip" ? 2 : 1;
+      const finalFare = metrics.distanceKm * rate * multiplier;
       setEstimatedFare(finalFare);
       setCalculationFinished(true);
 
@@ -216,8 +219,20 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
       setDistance(mockDist);
       setDuration(`${Math.round(mockDist / 55)} hrs`);
       const rate = vehicleType === "4-seater" ? 14 : 18;
-      setEstimatedFare(mockDist * rate);
+      const multiplier = tripType === "round-trip" ? 2 : 1;
+      const finalFare = mockDist * rate * multiplier;
+      setEstimatedFare(finalFare);
       setCalculationFinished(true);
+
+      fareRef.current.value = 0;
+      gsap.to(fareRef.current, {
+        value: finalFare,
+        duration: 1.5,
+        ease: "power3.out",
+        onUpdate: () => {
+          setAnimatedFare(Math.round(fareRef.current.value));
+        }
+      });
     } finally {
       setIsCalculating(false);
     }
@@ -254,11 +269,12 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
       pickup: pickupLocation.name,
       destination: destLocation.name,
       vehicleType,
-      distance,
-      duration,
+      distance: tripType === "round-trip" ? distance * 2 : distance,
+      duration: tripType === "round-trip" ? `${duration} each way` : duration,
       estimatedFare,
       passengerCount,
       travelDate: travelDate || undefined,
+      tripType,
     });
   };
 
@@ -438,6 +454,40 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
                 </AnimatePresence>
               </div>
 
+              {/* Segmented Selector for Trip Type */}
+              <div>
+                <label className="text-[11px] uppercase tracking-widest font-mono text-white/60 mb-2.5 block">Select Trip Type</label>
+                <div className="relative p-1 rounded-2xl bg-black/40 border border-white/10 flex items-center gap-1">
+                  
+                  {/* Sliding Indicator */}
+                  <motion.div
+                    layoutId="active-triptype-slider"
+                    className="absolute top-1 bottom-1 rounded-xl bg-brand-orange/90 shadow-[0_0_15px_rgba(255,107,0,0.3)] pointer-events-none"
+                    style={{
+                      width: "calc(50% - 6px)",
+                      left: tripType === "one-way" ? "6px" : "calc(50%)"
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setTripType("one-way")}
+                    className={`relative z-10 w-1/2 py-3 px-4 rounded-xl text-xs md:text-sm font-semibold transition-colors duration-300 flex items-center justify-center ${tripType === "one-way" ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                  >
+                    <span>One-Way Journey</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTripType("round-trip")}
+                    className={`relative z-10 w-1/2 py-3 px-4 rounded-xl text-xs md:text-sm font-semibold transition-colors duration-300 flex flex-col items-center justify-center ${tripType === "round-trip" ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                  >
+                    <span>Round-Trip Journey</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Segmented Selector for Vehicle */}
               <div>
                 <label className="text-[11px] uppercase tracking-widest font-mono text-white/60 mb-2.5 block">Select Luxury Cruiser</label>
@@ -460,7 +510,9 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
                     className={`relative z-10 w-1/2 py-3 px-4 rounded-xl text-xs md:text-sm font-semibold transition-colors duration-300 flex flex-col items-center justify-center ${vehicleType === "4-seater" ? "text-white" : "text-white/40 hover:text-white/70"}`}
                   >
                     <span>4 Seater Executive</span>
-                    <span className="text-[10px] font-mono opacity-80 mt-0.5">₹14 / KM</span>
+                    <span className="text-[10px] font-mono opacity-80 mt-0.5">
+                      <span className="line-through text-white/40 mr-1.5">₹18</span>₹14 / KM
+                    </span>
                   </button>
 
                   <button
@@ -469,7 +521,9 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
                     className={`relative z-10 w-1/2 py-3 px-4 rounded-xl text-xs md:text-sm font-semibold transition-colors duration-300 flex flex-col items-center justify-center ${vehicleType === "7-seater" ? "text-white" : "text-white/40 hover:text-white/70"}`}
                   >
                     <span>7 Seater Luxury</span>
-                    <span className="text-[10px] font-mono opacity-80 mt-0.5">₹18 / KM</span>
+                    <span className="text-[10px] font-mono opacity-80 mt-0.5">
+                      <span className="line-through text-white/40 mr-1.5">₹22</span>₹18 / KM
+                    </span>
                   </button>
                 </div>
               </div>
@@ -633,11 +687,15 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
                     <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs">
                       <div>
                         <span className="text-[10px] uppercase font-mono text-white/40 block">Total Distance</span>
-                        <span className="font-bold text-white font-display text-sm mt-0.5 block">{distance} KM</span>
+                        <span className="font-bold text-white font-display text-sm mt-0.5 block">
+                          {tripType === "round-trip" ? distance * 2 : distance} KM <span className="text-[10px] text-white/50 font-sans font-normal">({tripType === "round-trip" ? "Round-Trip" : "One-Way"})</span>
+                        </span>
                       </div>
                       <div>
                         <span className="text-[10px] uppercase font-mono text-white/40 block">Travel Duration</span>
-                        <span className="font-bold text-white font-display text-sm mt-0.5 block">{duration}</span>
+                        <span className="font-bold text-white font-display text-sm mt-0.5 block">
+                          {tripType === "round-trip" ? `${duration} each way` : duration}
+                        </span>
                       </div>
                       <div>
                         <span className="text-[10px] uppercase font-mono text-white/40 block">Vehicle Model</span>
@@ -645,7 +703,19 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
                       </div>
                       <div>
                         <span className="text-[10px] uppercase font-mono text-white/40 block">Dynamic Pricing</span>
-                        <span className="font-semibold text-brand-orange mt-0.5 block">₹{vehicleType === "4-seater" ? 14 : 18} / KM</span>
+                        <span className="font-semibold text-brand-orange mt-0.5 block flex items-center gap-1.5">
+                          {vehicleType === "4-seater" ? (
+                            <>
+                              <span className="line-through text-white/40 text-[10px]">₹18</span>
+                              <span>₹14 / KM</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="line-through text-white/40 text-[10px]">₹22</span>
+                              <span>₹18 / KM</span>
+                            </>
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -673,7 +743,8 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
           <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {carouselCards.map((city, idx) => {
               const currentRate = vehicleType === "4-seater" ? 14 : 18;
-              const price = city.distance * currentRate;
+              const multiplier = tripType === "round-trip" ? 2 : 1;
+              const price = city.distance * currentRate * multiplier;
 
                return (
                 <motion.div
@@ -693,11 +764,13 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-white/60">Distance</span>
-                      <span className="font-semibold text-white font-mono">{city.distance} KM</span>
+                      <span className="font-semibold text-white font-mono">{city.distance * multiplier} KM</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-white/60">Est. Travel Time</span>
-                      <span className="font-semibold text-white">{city.time}</span>
+                      <span className="font-semibold text-white">
+                        {tripType === "round-trip" ? `${city.time} each way` : city.time}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between pt-2.5 border-t border-white/10">
                       <span className="text-white/60">Dynamic Fare</span>
@@ -712,10 +785,14 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
 
         {/* TRANSPARENCY / VEHICLE SPEC COMPARISON */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-10">
-          <div className="p-6 rounded-[24px] bg-white/[0.02] border border-white/10 backdrop-blur-xl relative">
+          <div className="p-6 rounded-[24px] bg-white/[0.02] border border-white/10 backdrop-blur-xl relative animate-glow">
             <div className="absolute top-0 right-0 w-24 h-24 bg-brand-orange/5 blur-xl rounded-full" />
             <h4 className="text-lg font-bold font-display text-white mb-2">4 Seater Executive</h4>
-            <p className="text-3xl font-extrabold font-display text-brand-orange mb-3">₹14 <span className="text-xs text-white/40 font-mono">/ KM</span></p>
+            <p className="text-3xl font-extrabold font-display text-brand-orange mb-3 flex items-baseline gap-2">
+              <span className="line-through text-white/30 text-lg">₹18</span>
+              <span>₹14</span>
+              <span className="text-xs text-white/40 font-mono font-normal">/ KM</span>
+            </p>
             <ul className="text-xs text-white/70 space-y-2 font-sans">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-brand-orange shrink-0" /> Ideal for 1–4 Passengers</li>
               <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-brand-orange shrink-0" /> Sedans & Compact Luxury Cruisers</li>
@@ -726,7 +803,11 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
           <div className="p-6 rounded-[24px] bg-white/[0.02] border border-white/10 backdrop-blur-xl relative">
             <div className="absolute top-0 right-0 w-24 h-24 bg-brand-amber/5 blur-xl rounded-full" />
             <h4 className="text-lg font-bold font-display text-white mb-2">7 Seater Luxury</h4>
-            <p className="text-3xl font-extrabold font-display text-brand-orange mb-3">₹18 <span className="text-xs text-white/40 font-mono">/ KM</span></p>
+            <p className="text-3xl font-extrabold font-display text-brand-orange mb-3 flex items-baseline gap-2">
+              <span className="line-through text-white/30 text-lg">₹22</span>
+              <span>₹18</span>
+              <span className="text-xs text-white/40 font-mono font-normal">/ KM</span>
+            </p>
             <ul className="text-xs text-white/70 space-y-2 font-sans">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-brand-orange shrink-0" /> Ideal for 5–7 Passengers</li>
               <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-brand-orange shrink-0" /> Luxury MUVs (Innova Crysta / Hycross class)</li>

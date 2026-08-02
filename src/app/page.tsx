@@ -24,6 +24,7 @@ export interface JourneyData {
   estimatedFare: number;
   passengerCount: number;
   travelDate?: string;
+  tripType: "one-way" | "round-trip";
 }
 
 export default function Home() {

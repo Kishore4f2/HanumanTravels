@@ -675,32 +675,32 @@ export default function ExploreDestinations({ onJourneyPlanned }: ExploreDestina
               const currentRate = vehicleType === "4-seater" ? 14 : 18;
               const price = city.distance * currentRate;
 
-              return (
+               return (
                 <motion.div
                   key={city.id}
                   whileHover={{ y: -6 }}
                   onClick={() => handleCarouselCardClick(city)}
-                  className="flex-shrink-0 w-64 rounded-2xl bg-white/[0.02] border border-white/10 p-4.5 text-left cursor-pointer transition duration-300 hover:border-brand-orange/40 relative overflow-hidden group shadow-md"
+                  className="flex-shrink-0 w-64 rounded-2xl bg-white/[0.03] border border-white/10 p-5 text-left cursor-pointer transition duration-300 hover:border-brand-orange/40 relative overflow-hidden group shadow-md"
                 >
                   {/* City Image */}
-                  <div className="relative w-full h-32 rounded-xl overflow-hidden mb-3.5 bg-black/40">
+                  <div className="relative w-full h-32 rounded-xl overflow-hidden mb-4 bg-black/40">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={city.img} alt={city.name} className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                     <span className="absolute bottom-2.5 left-2.5 font-display text-sm font-extrabold text-white">{city.name}</span>
                   </div>
 
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between text-white/50">
-                      <span>Distance</span>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/60">Distance</span>
                       <span className="font-semibold text-white font-mono">{city.distance} KM</span>
                     </div>
-                    <div className="flex items-center justify-between text-white/50">
-                      <span>Est. Travel Time</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/60">Est. Travel Time</span>
                       <span className="font-semibold text-white">{city.time}</span>
                     </div>
-                    <div className="flex items-center justify-between text-white/50 pt-2 border-t border-white/5">
-                      <span>Dynamic Fare</span>
+                    <div className="flex items-center justify-between pt-2.5 border-t border-white/10">
+                      <span className="text-white/60">Dynamic Fare</span>
                       <span className="font-bold text-brand-orange font-display">₹{price.toLocaleString()}</span>
                     </div>
                   </div>

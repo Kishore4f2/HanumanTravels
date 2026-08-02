@@ -15,11 +15,23 @@ import BookingEngine from "@/components/booking/BookingEngine";
 import LuxuryFooter from "@/components/booking/LuxuryFooter";
 import WhatsAppFloatingButton from "@/components/ui/WhatsAppFloatingButton";
 
+export interface JourneyData {
+  pickup: string;
+  destination: string;
+  vehicleType: "4-seater" | "7-seater";
+  distance: number;
+  duration: string;
+  estimatedFare: number;
+  passengerCount: number;
+  travelDate?: string;
+}
+
 export default function Home() {
   const [loadProgress, setLoadProgress] = useState(0);
   const [isPreloaded, setIsPreloaded] = useState(false);
   const [isLoaderFinished, setIsLoaderFinished] = useState(false);
   const [isSequenceComplete, setIsSequenceComplete] = useState(false);
+  const [sharedJourney, setSharedJourney] = useState<JourneyData | null>(null);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const lenisRef = useRef<Lenis | null>(null);
@@ -95,9 +107,15 @@ export default function Home() {
       {/* 5. Choose Your Ride Section */}
       <ShowroomSection />
       {/* 6. Explore Destinations Section */}
-      <ExploreDestinations />
+      <ExploreDestinations onJourneyPlanned={(data) => {
+        setSharedJourney(data);
+        const bookingSection = document.getElementById("booking");
+        if (bookingSection) {
+          bookingSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }} />
       {/* 7. Luxury Booking Engine Section */}
-      <BookingEngine />
+      <BookingEngine initialJourney={sharedJourney} />
       {/* 8. Luxury Footer */}
       <LuxuryFooter />
       {/* 9. Floating WhatsApp Action Button (6300071224) */}

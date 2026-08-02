@@ -17,12 +17,14 @@ import {
 } from "lucide-react";
 
 interface JourneyDashboardProps {
+  pickupLocation: string;
   destination: Destination;
   vehicleType: "4-seater" | "7-seater";
   fare: number;
 }
 
 export default function JourneyDashboard({
+  pickupLocation,
   destination,
   vehicleType,
   fare,
@@ -53,10 +55,10 @@ export default function JourneyDashboard({
 
         {/* Route Overview */}
         <div className="flex items-center justify-between gap-3 mb-6">
-          <div>
+          <div className="max-w-[45%]">
             <span className="text-[10px] uppercase font-mono text-white/50 block">PICKUP</span>
-            <span className="text-base font-extrabold text-white font-display">
-              Rajahmundry (HQ)
+            <span className="text-sm font-extrabold text-white font-display truncate block" title={pickupLocation}>
+              {pickupLocation}
             </span>
           </div>
 
@@ -65,9 +67,9 @@ export default function JourneyDashboard({
             <span className="text-xs">➔</span>
           </div>
 
-          <div className="text-right">
+          <div className="text-right max-w-[45%]">
             <span className="text-[10px] uppercase font-mono text-white/50 block">DESTINATION</span>
-            <span className="text-base font-extrabold text-brand-orange font-display">
+            <span className="text-sm font-extrabold text-brand-orange font-display truncate block" title={destination.name}>
               {destination.name}
             </span>
           </div>
@@ -92,7 +94,7 @@ export default function JourneyDashboard({
 
       {/* 2. LIVE ROUTE PREVIEW (Mini animated highway) */}
       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden flex items-center justify-between gap-3 text-xs">
-        <span className="font-mono text-white/70 font-semibold">Rajahmundry</span>
+        <span className="font-mono text-white/70 font-semibold truncate max-w-[30%]">{pickupLocation.split(",")[0]}</span>
 
         {/* Highway line with moving car */}
         <div className="relative flex-1 h-0.5 bg-white/10 rounded-full mx-2 overflow-hidden">
@@ -103,7 +105,7 @@ export default function JourneyDashboard({
           />
         </div>
 
-        <span className="font-mono text-brand-orange font-semibold">{destination.name.split(" ")[0]}</span>
+        <span className="font-mono text-brand-orange font-semibold truncate max-w-[30%]">{destination.name.split(",")[0].split(" ")[0]}</span>
       </div>
 
       {/* 3. VEHICLE SPECS CARD */}

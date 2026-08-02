@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DESTINATIONS, Destination, RAJAHMUNDRY_HQ } from "../destinations/destinationsData";
+import { DESTINATIONS, Destination } from "../destinations/destinationsData";
 import JourneyDashboard from "./JourneyDashboard";
 import ReservationPanel from "./ReservationPanel";
 import ConfirmationCard from "./ConfirmationCard";
 import { Sparkles } from "lucide-react";
+import { JourneyData } from "@/app/page";
 
-export default function JourneyReservationExperience() {
+interface JourneyReservationExperienceProps {
+  initialJourney: JourneyData | null;
+}
+
+export default function JourneyReservationExperience({ initialJourney }: JourneyReservationExperienceProps) {
   // State synchronized from choices
+  const [pickupLocation, setPickupLocation] = useState("Rajahmundry (HQ)");
   const [selectedDestination, setSelectedDestination] = useState<Destination>(
     DESTINATIONS[0] // Defaults to Hyderabad or selected route
   );
@@ -28,11 +34,41 @@ export default function JourneyReservationExperience() {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [bookingId, setBookingId] = useState("");
 
+  // Sync state with shared state from planner (Section 4)
+  useEffect(() => {
+    if (initialJourney) {
+      setPickupLocation(initialJourney.pickup);
+      setVehicleType(initialJourney.vehicleType);
+      if (initialJourney.travelDate) {
+        setPickupDate(initialJourney.travelDate);
+      }
+      setPassengers(initialJourney.passengerCount);
+
+      // Construct a dynamic destination object
+      const customDest: Destination = {
+        id: "custom",
+        name: initialJourney.destination,
+        state: "AP",
+        category: "Popular",
+        distanceKm: initialJourney.distance,
+        estimatedTime: initialJourney.duration,
+        price4Seater: initialJourney.vehicleType === "4-seater" ? initialJourney.estimatedFare : Math.round(initialJourney.distance * 14),
+        price7Seater: initialJourney.vehicleType === "7-seater" ? initialJourney.estimatedFare : Math.round(initialJourney.distance * 18),
+        description: `Custom route from ${initialJourney.pickup} to ${initialJourney.destination}`,
+        lat: 0,
+        lng: 0,
+        vectorX: 0,
+        vectorY: 0
+      };
+      setSelectedDestination(customDest);
+    }
+  }, [initialJourney]);
+
   // Calculate live fare
   const currentPrice =
-    vehicleType === "4-seater"
-      ? selectedDestination.price4Seater
-      : selectedDestination.price7Seater;
+    selectedDestination.id === "custom"
+      ? (vehicleType === "4-seater" ? selectedDestination.price4Seater : selectedDestination.price7Seater)
+      : (vehicleType === "4-seater" ? selectedDestination.price4Seater : selectedDestination.price7Seater);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +86,7 @@ export default function JourneyReservationExperience() {
     const message = `Hi Hanuman Travels, I have reserved a luxury ride on your portal.
 *Booking Ref:* #${randomRef}
 *Passenger:* ${fullName} (${phoneNumber})
-*Route:* Rajahmundry (HQ) ➔ ${selectedDestination.name}
+*Route:* ${pickupLocation} ➔ ${selectedDestination.name}
 *Vehicle:* ${vehicleTitle}
 *Date & Time:* ${pickupDate} at ${pickupTime} (${passengers} Passengers)
 *Estimated Fare:* ₹${currentPrice.toLocaleString()}
@@ -116,7 +152,7 @@ ${specialRequests ? `*Special Instructions:* ${specialRequests}` : ""}`;
             <ConfirmationCard
               key="confirmation"
               bookingId={bookingId}
-              pickupLocation="Rajahmundry (HQ)"
+              pickupLocation={pickupLocation}
               destination={selectedDestination}
               vehicleType={vehicleType}
               pickupDate={pickupDate}
@@ -140,6 +176,7 @@ ${specialRequests ? `*Special Instructions:* ${specialRequests}` : ""}`;
               {/* LEFT PANEL: 40% Width on Desktop */}
               <div className="w-full lg:w-[40%] flex flex-col">
                 <JourneyDashboard
+                  pickupLocation={pickupLocation}
                   destination={selectedDestination}
                   vehicleType={vehicleType}
                   fare={currentPrice}
@@ -149,6 +186,8 @@ ${specialRequests ? `*Special Instructions:* ${specialRequests}` : ""}`;
               {/* RIGHT PANEL: 60% Width on Desktop */}
               <div className="w-full lg:w-[60%] flex flex-col">
                 <ReservationPanel
+                  pickupLocation={pickupLocation}
+                  onChangePickupLocation={(val) => setPickupLocation(val)}
                   destination={selectedDestination}
                   onChangeDestination={(dest) => setSelectedDestination(dest)}
                   vehicleType={vehicleType}

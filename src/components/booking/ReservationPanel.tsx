@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 
 interface ReservationPanelProps {
+  pickupLocation: string;
+  onChangePickupLocation: (val: string) => void;
   destination: Destination;
   onChangeDestination: (dest: Destination) => void;
   vehicleType: "4-seater" | "7-seater";
@@ -37,6 +39,8 @@ interface ReservationPanelProps {
 }
 
 export default function ReservationPanel({
+  pickupLocation,
+  onChangePickupLocation,
   destination,
   onChangeDestination,
   vehicleType,
@@ -89,20 +93,34 @@ export default function ReservationPanel({
         {/* 2. AUTO PRE-FILLED READ-ONLY SELECTIONS SUMMARY */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-white/[0.02] border border-white/10">
           <div>
-            <span className="text-[9px] uppercase font-mono text-white/40 block">Pickup</span>
-            <span className="text-xs font-semibold text-white font-display">Rajahmundry (HQ)</span>
+            <span className="text-[9px] uppercase font-mono text-white/40 block mb-0.5">Pickup</span>
+            <input
+              type="text"
+              value={pickupLocation}
+              onChange={(e) => onChangePickupLocation(e.target.value)}
+              className="bg-transparent text-xs font-semibold text-white font-display focus:outline-none w-full border-b border-white/5 focus:border-brand-orange/40 pb-0.5"
+            />
           </div>
 
           <div>
-            <label className="text-[9px] uppercase font-mono text-white/40 block">Destination</label>
+            <label className="text-[9px] uppercase font-mono text-white/40 block mb-0.5">Destination</label>
             <select
               value={destination.id}
               onChange={(e) => {
-                const found = DESTINATIONS.find((d) => d.id === e.target.value);
-                if (found) onChangeDestination(found);
+                if (e.target.value === "custom") {
+                  // If custom was selected, keep the destination object as is
+                } else {
+                  const found = DESTINATIONS.find((d) => d.id === e.target.value);
+                  if (found) onChangeDestination(found);
+                }
               }}
-              className="bg-transparent text-xs font-semibold text-brand-orange font-display focus:outline-none cursor-pointer w-full"
+              className="bg-transparent text-xs font-semibold text-brand-orange font-display focus:outline-none cursor-pointer w-full border-b border-white/5 focus:border-brand-orange/40 pb-0.5"
             >
+              {destination.id === "custom" && (
+                <option value="custom" className="bg-black text-brand-orange">
+                  {destination.name} (Planned)
+                </option>
+              )}
               {DESTINATIONS.map((d) => (
                 <option key={d.id} value={d.id} className="bg-black text-white">
                   {d.name}
@@ -112,11 +130,11 @@ export default function ReservationPanel({
           </div>
 
           <div>
-            <label className="text-[9px] uppercase font-mono text-white/40 block">Vehicle Model</label>
+            <label className="text-[9px] uppercase font-mono text-white/40 block mb-0.5">Vehicle Model</label>
             <select
               value={vehicleType}
               onChange={(e) => onChangeVehicleType(e.target.value as any)}
-              className="bg-transparent text-xs font-semibold text-white font-display focus:outline-none cursor-pointer w-full"
+              className="bg-transparent text-xs font-semibold text-white font-display focus:outline-none cursor-pointer w-full border-b border-white/5 focus:border-brand-orange/40 pb-0.5"
             >
               <option value="4-seater" className="bg-black text-white">4 Seater Executive</option>
               <option value="7-seater" className="bg-black text-white">7 Seater Luxury</option>
